@@ -1,0 +1,44 @@
+[
+    {
+        "id": 1,
+        "timestamp": "2026-09-05T14:34:36.794072",
+        "image": "Screenshot 2026-09-05 132231.png",
+        "description": "flood occured due to which high accumulation of water which causes sever to life",
+        "location_name": "Bengaluru, Karnataka, India",
+        "latitude": 13.118331730565368,
+        "longitude": 77.63299316921965,
+        "risk": "LOW",
+        "confidence": 75,
+        "detected_condition": "No significant landslide-related warning indicator was identified from the provided description.",
+        "assessment": "The provided image report does not indicate a clear landslide-related hazard based on the description supplied. The terrain should still be monitored, particularly during heavy rainfall or rapidly changing weather conditions.",
+        "reason": "No strong landslide warning indicators were identified in the provided description.",
+        "precautions": [
+            "Continue monitoring the surrounding terrain.",
+            "Avoid unnecessary activity on very steep slopes.",
+            "Watch for new cracks, erosion or unusual soil movement.",
+            "Stay alert during periods of heavy or prolonged rainfall.",
+            "Report any newly observed hazardous changes to local authorities."
+        ]
+    },
+    {
+        "id": 2,
+        "timestamp": "2026-09-05T15:06:18.039304",
+        "image": "Screenshot 2026-09-05 132231.png",
+        "description": "fllood",
+        "location_name": "Location not provided",
+        "latitude": null,
+        "longitude": null,
+        "risk": "LOW",
+        "confidence": 75,
+        "detected_condition": "No significant landslide-related warning indicator was identified from the provided description.",
+        "assessment": "The provided image report does not indicate a clear landslide-related hazard based on the description supplied. The terrain should still be monitored, particularly during heavy rainfall or rapidly changing weather conditions.",
+        "reason": "No strong landslide warning indicators were identified in the provided description.",
+        "precautions": [
+            "Continue monitoring the surrounding terrain.",
+            "Avoid unnecessary activity on very steep slopes.",
+            "Watch for new cracks, erosion or unusual soil movement.",
+            "Stay alert during periods of heavy or prolonged rainfall.",
+            "Report any newly observed hazardous changes to local authorities."
+        ]
+    }
+]
