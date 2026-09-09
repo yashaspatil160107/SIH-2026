@@ -174,7 +174,7 @@ def predict():
 
         prediction = model.predict(features)[0]
 
-        print("Raw model prediction:", prediction)
+        print("Raw model prediction:", prediction);
 
         # ====================================================
         # CONVERT MODEL OUTPUT TO RISK
@@ -256,7 +256,7 @@ def predict():
                     ]:
 
                         probabilities[
-                            cls_string
+                            cls_string;
                         ] = float(probability * 100)
 
                     elif cls_string in [
