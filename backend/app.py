@@ -12,7 +12,10 @@ CORS(app)
 # LOAD MODEL
 # ============================================================
 
-MODEL_PATH = "landslide_model.pkl"
+MODEL_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "landslide_model.pkl"
+)
 
 try:
     model = joblib.load(MODEL_PATH)
