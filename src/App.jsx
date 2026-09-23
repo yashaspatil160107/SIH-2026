@@ -17,6 +17,8 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
+
 // Leaflet default icon fix
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -216,6 +218,49 @@ function Dashboard() {
 
   const [aiAttempted, setAiAttempted] =
     useState(false);
+
+  // ===============================
+  // SENSOR STREAM (SIMULATION READY)
+  // ===============================
+
+  const [sensorData, setSensorData] = useState(null);
+  const [sensorHistory, setSensorHistory] = useState([]);
+  const [sensorLoading, setSensorLoading] = useState(false);
+  const [sensorError, setSensorError] = useState("");
+
+  const fetchSensorStream = useCallback(async () => {
+    try {
+      setSensorLoading(true);
+      const [latestResponse, historyResponse] = await Promise.all([
+        fetch(`${API_BASE}/api/sensor-data/latest`),
+        fetch(`${API_BASE}/api/sensor-data/history?limit=20`),
+      ]);
+
+      const latest = await latestResponse.json();
+      const history = await historyResponse.json();
+
+      if (!latestResponse.ok || !latest.success) {
+        throw new Error(latest?.error || "Sensor stream unavailable");
+      }
+
+      setSensorData(latest.data);
+      setSensorHistory(Array.isArray(history?.data) ? history.data : []);
+      setSensorError("");
+    } catch (err) {
+      console.error("Sensor stream error:", err);
+      setSensorError("Sensor stream unavailable");
+    } finally {
+      setSensorLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!location) return undefined;
+
+    fetchSensorStream();
+    const interval = window.setInterval(fetchSensorStream, 3000);
+    return () => window.clearInterval(interval);
+  }, [location, fetchSensorStream]);
 
   // ===============================
   // Haversine Distance
@@ -445,7 +490,7 @@ function Dashboard() {
           setAiPrediction(null);
 
           const response = await fetch(
-            "http://127.0.0.1:5000/predict",
+            `${API_BASE}/predict`,
             {
               method: "POST",
 
@@ -1281,7 +1326,15 @@ function Dashboard() {
       : "LOW";
 
   // ===============================
-  // COMBINED AI + ENVIRONMENTAL RISK
+  // SENSOR EARLY-WARNING RISK
+  // ===============================
+
+  const sensorRisk = sensorData?.risk
+    ? String(sensorData.risk).toUpperCase()
+    : null;
+
+  // ===============================
+  // COMBINED AI + ENVIRONMENTAL + SENSOR RISK
   // ===============================
 
   const aiRisk =
@@ -1293,6 +1346,12 @@ function Dashboard() {
 
   let combinedRisk =
     environmentalRisk;
+
+  if (sensorRisk === "CRITICAL" || sensorRisk === "HIGH") {
+    combinedRisk = "HIGH";
+  } else if (sensorRisk === "MODERATE" && combinedRisk === "LOW") {
+    combinedRisk = "MODERATE";
+  }
 
   if (aiRisk === "HIGH") {
     combinedRisk = "HIGH";
@@ -1675,7 +1734,7 @@ function Dashboard() {
       try {
         const aiResponse =
           await fetch(
-            "http://127.0.0.1:5000/predict",
+            `${API_BASE}/predict`,
             {
               method: "POST",
 
@@ -1870,7 +1929,7 @@ function Dashboard() {
 
       const backendResponse =
         await fetch(
-          "http://127.0.0.1:5000/emergency-alert",
+          `${API_BASE}/emergency-alert`,
           {
             method: "POST",
 
@@ -2222,6 +2281,63 @@ function Dashboard() {
           </p>
         )}
 
+      </section>
+
+      {/* LIVE SENSOR NETWORK */}
+
+      <section className="sensor-panel">
+        <div className="sensor-panel-head">
+          <div>
+            <div className="sensor-kicker">📡 EARLY-WARNING SENSOR NETWORK</div>
+            <h2>Live Slope Stability Monitor</h2>
+            <p>Continuous environmental signals are simulated now and can be replaced by ESP32 sensor data later.</p>
+          </div>
+          <div className={`sensor-mode ${sensorData?.mode === "HARDWARE" ? "hardware" : "simulation"}`}>
+            <span className="sensor-pulse"></span>
+            {sensorData?.mode === "HARDWARE" ? "LIVE HARDWARE" : "SIMULATION MODE"}
+          </div>
+        </div>
+
+        <div className="sensor-grid">
+          {[
+            ["🌧️", "Rainfall", sensorData?.rainfall, "mm/h", "rain"],
+            ["💧", "Soil Moisture", sensorData?.soil_moisture, "%", "moisture"],
+            ["⛰️", "Slope Tilt", sensorData?.tilt, "°", "tilt"],
+            ["📏", "Ground Movement", sensorData?.ground_displacement, "mm", "movement"],
+            ["🌊", "Pore Pressure", sensorData?.pore_pressure, "kPa", "pressure"],
+          ].map(([icon, label, value, unit, key]) => (
+            <div className={`sensor-tile sensor-${key}`} key={label}>
+              <div className="sensor-icon">{icon}</div>
+              <div className="sensor-label">{label}</div>
+              <div className="sensor-value">{sensorLoading && !sensorData ? "..." : value ?? "--"}<span>{unit}</span></div>
+              <div className="sensor-bar"><span style={{ width: `${Math.min(100, Math.max(5, Number(value) || 0))}%` }} /></div>
+            </div>
+          ))}
+        </div>
+
+        <div className="sensor-warning-row">
+          <div className={`sensor-risk-pill ${sensorRisk === "CRITICAL" || sensorRisk === "HIGH" ? "danger" : sensorRisk === "MODERATE" ? "watch" : "safe"}`}>
+            <span>AI-READY SENSOR STATUS</span>
+            <strong>{sensorRisk || "WAITING"}</strong>
+          </div>
+          <div className="sensor-warning-copy">
+            {sensorData?.warning
+              ? `⚠️ Increasing instability pattern: ${(sensorData.reasons || []).join(", ")}.`
+              : "✓ No simulated instability threshold is currently triggered."}
+          </div>
+          <div className="sensor-device">{sensorError ? "⚠️ API OFFLINE" : `Device: ${sensorData?.device_id || "SIM-ZONE-01"}`}</div>
+        </div>
+
+        <div className="sensor-trend">
+          <div className="trend-title">Sensor trend · last readings</div>
+          <div className="trend-bars">
+            {(sensorHistory.length ? sensorHistory.slice(-14) : []).map((item, index) => {
+              const value = Math.min(100, Math.max(8, (Number(item.soil_moisture || 0) * 0.65) + (Number(item.ground_displacement || 0) * 7)));
+              return <span key={`${item.timestamp}-${index}`} style={{ height: `${value}%` }} title={`${item.soil_moisture}% moisture`} />;
+            })}
+          </div>
+          <div className="trend-caption">Rising moisture + tilt + ground movement can trigger an early-warning state.</div>
+        </div>
       </section>
 
       {/* METRIC CARDS */}
