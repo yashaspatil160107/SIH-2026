@@ -203,7 +203,7 @@ function ReportHazard() {
       formData.append("description", description);
 
       const response = await fetch(
-        "http://127.0.0.1:5000/analyze-image",
+        "https://sih-2026-backend-9daj.onrender.com/analyze-image",
         {
           method: "POST",
           body: formData,
