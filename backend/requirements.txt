@@ -1,4 +1,4 @@
-﻿anyio==4.13.0
+anyio==4.13.0
 argon2-cffi==25.1.0
 argon2-cffi-bindings==25.1.0
 arrow==1.4.0
@@ -84,7 +84,6 @@ pypiwin32==223
 python-dateutil==2.9.0.post0
 python-json-logger==4.1.0
 pyttsx3==2.99
-pywin32==311
 pywinpty==3.0.3
 PyYAML==6.0.3
 pyzmq==27.1.0
